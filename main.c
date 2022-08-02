@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <assert.h>
 #include <stdbool.h>
@@ -45,7 +46,11 @@ int chunk_list_find(Chunk_List *list, void *ptr)
 }
 
 void chunk_list_remove(Chunk_List *list, size_t index) {
-	assert(false && "not implemented yet");
+  assert(index < list->count);
+  for (size_t i; i < list->count - 1; ++i) {
+    list->chunks[i] = list->chunks[i + 1];
+  }
+  list->count -= 1;
 }
 
 void chunk_list_insert(Chunk_List *list, void* start, size_t size) {
@@ -98,10 +103,12 @@ void *memory_allocate(size_t size)
 // O(Alloceted)
 void memory_free(void *ptr)
 {
+  if(ptr != NULL){
 	const int index = chunk_list_find(&allocaded_chunks, ptr);
 	assert(index >= 0);
 	chunk_list_insert(&freed_chunks, allocaded_chunks.chunks[index].start, allocaded_chunks.chunks[index].size);
 	chunk_list_remove(&allocaded_chunks, (size_t)index);
+  }
 }
 
 // Driver code.
@@ -110,7 +117,7 @@ int main(int argc, char** argv)
 	for(int i = 0; i < 100; ++i){
 		void *p = memory_allocate(i);
 		if(i % 2 == 0){
-			//memory_free(p);
+			memory_free(p);
 		}
 	}
 	chunk_list_dump(&allocaded_chunks);
