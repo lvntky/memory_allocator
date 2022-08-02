@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define MEMORY_CAPACITY 640000
 #define CHUNK_LIST_CAPACITY 1024
@@ -9,7 +10,7 @@
 // Cust kind of meta-data for 
 // Allocated memory on the heap...
 typedef struct {
-	void* start;
+	char* start;
 	size_t size;
 } Memory_Chunk;
 
@@ -19,10 +20,28 @@ typedef struct
 	Memory_Chunk chunks[CHUNK_LIST_CAPACITY];
 } Chunk_List;
 
-int chunk_list_find(Chunk_List *chunk, void *ptr)
+int chunk_start_compar(const void *a, const void *b) {
+  const Memory_Chunk *a_chunk = a;
+  const Memory_Chunk *b_chunk = b;
+  return a_chunk->start - b_chunk->start;
+}
+int chunk_list_find(Chunk_List *list, void *ptr)
 {
-	assert(false && "not implemented yet");
-	return -1;
+  Memory_Chunk key = {
+    .start = ptr
+  };
+
+  Memory_Chunk *result = bsearch(&key, list->chunks,
+		list->count, sizeof(list->chunks[0]),
+		chunk_start_compar);
+  if(result != 0) {
+    assert(list->chunks <= result);
+    return (result - list->chunks) / sizeof(list->chunks[0]);
+  }
+  else {
+    return -1;
+  }
+  
 }
 
 void chunk_list_remove(Chunk_List *list, size_t index) {
@@ -79,9 +98,13 @@ void *memory_allocate(size_t size)
 // O(Alloceted)
 void memory_free(void *ptr)
 {
-	assert(false && "free implemet edilecek");	
+	const int index = chunk_list_find(&allocaded_chunks, ptr);
+	assert(index >= 0);
+	chunk_list_insert(&freed_chunks, allocaded_chunks.chunks[index].start, allocaded_chunks.chunks[index].size);
+	chunk_list_remove(&allocaded_chunks, (size_t)index);
 }
 
+// Driver code.
 int main(int argc, char** argv)
 {
 	for(int i = 0; i < 100; ++i){
