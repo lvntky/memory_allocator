@@ -6,7 +6,11 @@ Ofcourse these repo is not as effective as stdlib malloc but greate instance and
 
 ## Build
 ```
-$ make -B
+make -B
+```
+Or
+```
+make interface
 ```
 
 ## Limiations
